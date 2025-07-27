@@ -46,6 +46,10 @@ double length(Vector v) {
     return sqrt(squaredLength(v));
 }
 
+Vector unit(Vector v) {
+    return v / length(v);
+}
+
 Vector cross(Vector a, Vector b) {
     return Vector{
         a.y * b.z - a.z * b.y,

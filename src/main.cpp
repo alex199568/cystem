@@ -28,5 +28,7 @@ int main() {
 
     printf("a length: %f\n", length(a));
 
+    print(unit(a));
+
     return 0;
 }
