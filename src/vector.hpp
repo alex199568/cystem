@@ -2,6 +2,7 @@
 #define _VECTOR_HPP_
 
 #include <stdio.h>
+#include <math.h>
 
 struct Vector {
     double x;
@@ -35,6 +36,14 @@ Vector operator/(Vector a, double d) {
 
 double dot(Vector a, Vector b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+double squaredLength(Vector v) {
+    return dot(v, v);
+}
+
+double length(Vector v) {
+    return sqrt(squaredLength(v));
 }
 
 Vector cross(Vector a, Vector b) {

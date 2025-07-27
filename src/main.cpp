@@ -26,5 +26,7 @@ int main() {
 
     print(-a);
 
+    printf("a length: %f\n", length(a));
+
     return 0;
 }
