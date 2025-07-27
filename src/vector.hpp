@@ -21,6 +21,10 @@ Vector operator-(Vector a, Vector b) {
     return Vector{a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
+Vector operator-(Vector v) {
+    return Vector{-(v.x), -(v.y), -(v.z)};
+}
+
 Vector operator*(Vector a, double d) {
     return Vector{a.x * d, a.y * d, a.z * d};
 }

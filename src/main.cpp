@@ -24,5 +24,7 @@ int main() {
     auto cr = cross(a, b);
     print(cr);
 
+    print(-a);
+
     return 0;
 }
