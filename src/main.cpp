@@ -14,6 +14,10 @@ Vector operator+(Vector a, Vector b) {
     return Vector{a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
+Vector operator-(Vector a, Vector b) {
+    return Vector{a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
 int main() {
     printf("Cystem\n");
 
@@ -21,8 +25,10 @@ int main() {
     print_vector(a);
     Vector b = {2, 3, 4};
     print_vector(b);
-    Vector sum = a + b;
+    auto sum = a + b;
     print_vector(sum);
+    auto dif = a - b;
+    print_vector(dif);
 
     return 0;
 }
