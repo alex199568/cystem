@@ -1,18 +1,17 @@
 #include <stdio.h>
 
-typedef struct Vector {
+struct Vector {
     double x;
     double y;
     double z;
-} Vector;
+};
 
 void print_vector(Vector vector) {
     printf("Vector(%f %f %f)\n", vector.x, vector.y, vector.z);
 }
 
-Vector vvadd(Vector a, Vector b) {
-    Vector result = {a.x + b.x, a.y + b.y, a.z + b.z};
-    return result;
+Vector operator+(Vector a, Vector b) {
+    return Vector{a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
 int main() {
@@ -22,7 +21,7 @@ int main() {
     print_vector(a);
     Vector b = {2, 3, 4};
     print_vector(b);
-    Vector sum = vvadd(a, b);
+    Vector sum = a + b;
     print_vector(sum);
 
     return 0;
