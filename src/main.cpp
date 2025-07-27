@@ -1,30 +1,6 @@
 #include <stdio.h>
 
-struct Vector {
-    double x;
-    double y;
-    double z;
-};
-
-void print(Vector vector) {
-    printf("Vector(%f %f %f)\n", vector.x, vector.y, vector.z);
-}
-
-Vector operator+(Vector a, Vector b) {
-    return Vector{a.x + b.x, a.y + b.y, a.z + b.z};
-}
-
-Vector operator-(Vector a, Vector b) {
-    return Vector{a.x - b.x, a.y - b.y, a.z - b.z};
-}
-
-Vector operator*(Vector a, double d) {
-    return Vector{a.x * d, a.y * d, a.z * d};
-}
-
-Vector operator/(Vector a, double d) {
-    return Vector{a.x / d, a.y / d, a.z / d};
-}
+#include "vector.hpp"
 
 int main() {
     printf("Cystem\n");
@@ -41,6 +17,9 @@ int main() {
     print(m);
     auto d = a / 2;
     print(d);
+
+    auto adb = dot(a, b);
+    printf("a dot b = %f\n", adb);
 
     return 0;
 }
