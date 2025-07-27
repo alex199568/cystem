@@ -21,5 +21,8 @@ int main() {
     auto adb = dot(a, b);
     printf("a dot b = %f\n", adb);
 
+    auto cr = cross(a, b);
+    print(cr);
+
     return 0;
 }
