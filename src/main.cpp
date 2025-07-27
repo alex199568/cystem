@@ -22,6 +22,10 @@ Vector operator*(Vector a, double d) {
     return Vector{a.x * d, a.y * d, a.z * d};
 }
 
+Vector operator/(Vector a, double d) {
+    return Vector{a.x / d, a.y / d, a.z / d};
+}
+
 int main() {
     printf("Cystem\n");
 
@@ -35,6 +39,8 @@ int main() {
     print(dif);
     auto m = a * 2;
     print(m);
+    auto d = a / 2;
+    print(d);
 
     return 0;
 }
