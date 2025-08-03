@@ -32,21 +32,10 @@ int main() {
 
     auto result = tr * s;
     result.print();
-    auto inv = result.inverse();
-    inv.print();
+    printf("\n");
 
-    Vector v{1, 2, 3};
-    auto vResult = result * v;
-    vResult.print();
-
-    Point p{8, 1, -1};
-    auto pResult = result * p;
-    pResult.print();
-
-    auto originalVector = inv * vResult;
-    originalVector.print();
-    auto originalPoint = inv * pResult;
-    originalPoint.print();
+    auto t = result.transpose();
+    t.print();
 
 
     return 0;

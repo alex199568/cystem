@@ -199,6 +199,18 @@ class Matrix {
 
         return result;
     }
+
+    Matrix transpose() {
+        Matrix result;
+
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.set(j, i, get(i, j));
+            }
+        }
+
+        return result;
+    }
 };
 
 Matrix operator*(Matrix a, Matrix b) {
