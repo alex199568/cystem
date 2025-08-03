@@ -37,5 +37,10 @@ int main() {
     auto vResult = result * v;
     vResult.print();
 
+    Point p{8, 1, -1};
+    auto pResult = result * p;
+    pResult.print();
+
+
     return 0;
 }

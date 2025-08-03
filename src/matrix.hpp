@@ -6,6 +6,7 @@
 #include <array>
 
 #include "vector.hpp"
+#include "point.hpp"
 
 class Matrix2 {
     std::array<double, 4> items;
@@ -125,6 +126,13 @@ Vector operator*(Matrix m, Vector v) {
         m.get(1, 0) * v.x + m.get(1, 1) * v.y + m.get(1, 2) * v.z,
         m.get(2, 0) * v.x + m.get(2, 1) * v.y + m.get(2, 2) * v.z,
     };
+}
+
+Point operator*(Matrix m, Point p) {
+    return Point{
+        m.get(0, 0) * p.x + m.get(0, 1) * p.y + m.get(0, 2) * p.z + m.get(0, 3),
+        m.get(1, 0) * p.x + m.get(1, 1) * p.y + m.get(1, 2) * p.z + m.get(1, 3),
+        m.get(2, 0) * p.x + m.get(2, 1) * p.y + m.get(2, 2) * p.z + m.get(2, 3)};
 }
 
 Matrix translation(double x, double y, double z) {
