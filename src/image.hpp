@@ -16,10 +16,6 @@ struct Image {
         delete[] colors;
     }
 
-    int index(int x, int y) {
-        return y * w + x;
-    }
-
     Color get(int x, int y) {
         return colors[index(x, y)];
     }
@@ -29,6 +25,11 @@ struct Image {
     }
 
     void save(const char *path);
+
+  private:
+    int index(int x, int y) {
+        return y * w + x;
+    }
 };
 
 #endif

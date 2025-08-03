@@ -5,12 +5,9 @@
 #include "point.hpp"
 #include "color.hpp"
 #include "image.hpp"
+#include "matrix.hpp"
 
-
-
-int main() {
-    printf("Cystem\n");
-
+void render() {
     Image image(128, 96);
 
     for (int y = 10; y < 30; ++y) {
@@ -20,6 +17,15 @@ int main() {
     }
 
     image.save("renders/image.png");
+}
+
+int main() {
+    printf("Cystem\n");
+
+    auto tr = translation(1, 2.0, -2.3);
+    auto s = scale(0.4, 0.2, 4);
+    auto result = tr * s;
+    print(result);
 
     return 0;
 }
