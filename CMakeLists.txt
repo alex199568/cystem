@@ -8,6 +8,8 @@ project(cystem)
 # rather than globbing so that the build system knows when to regenerate:contentReference[oaicite:0]{index=0}.
 set(SRC_FILES
     src/main.cpp
+    src/color.cpp
+    src/image.cpp
 )
 
 # Define an executable target named "cystem" from the listed files

@@ -13,7 +13,7 @@ struct Image {
     }
 
     ~Image() {
-        delete colors;
+        delete[] colors;
     }
 
     int index(int x, int y) {
@@ -27,6 +27,8 @@ struct Image {
     void set(int x, int y, Color color) {
         colors[index(x, y)] = color;
     }
+
+    void save(const char *path);
 };
 
 #endif
