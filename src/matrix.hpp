@@ -1,6 +1,7 @@
 #ifndef _MATRIX_HPP_
 #define _MATRIX_HPP_
 
+#include <cmath>
 #include <stdio.h>
 
 #include <array>
@@ -248,6 +249,33 @@ Matrix translation(double x, double y, double z) {
     return Matrix({1, 0, 0, x,
                    0, 1, 0, y,
                    0, 0, 1, z,
+                   0, 0, 0, 1});
+}
+
+Matrix rotationX(double rads) {
+    double c = cos(rads);
+    double s = sin(rads);
+    return Matrix({1, 0, 0, 0,
+                   0, c, -s, 0,
+                   0, s, c, 0,
+                   0, 0, 0, 1});
+}
+
+Matrix rotationY(double rads) {
+    double c = cos(rads);
+    double s = sin(rads);
+    return Matrix({c, 0, s, 0,
+                   0, 1, 0, 0,
+                   -s, 0, c, 0,
+                   0, 0, 0, 1});
+}
+
+Matrix rotationZ(double rads) {
+    double c = cos(rads);
+    double s = sin(rads);
+    return Matrix({c, -s, 0, 0,
+                   s, c, 0, 0,
+                   0, 0, 1, 0,
                    0, 0, 0, 1});
 }
 

@@ -6,6 +6,7 @@
 #include "color.hpp"
 #include "image.hpp"
 #include "matrix.hpp"
+#include "utils.hpp"
 
 void render() {
     Image image(128, 96);
@@ -24,19 +25,12 @@ int main() {
 
     auto tr = translation(1, 2.0, -2.3);
     auto s = scale(0.4, 0.2, 4);
+    auto rx = rotationX(pi / 3);
+    auto ry = rotationY(pi / 4);
+    auto rz = rotationZ(pi / 2);
 
-    tr.print();
-    printf("\n");
-    s.print();
-    printf("\n");
-
-    auto result = tr * s;
+    auto result = tr * rz * ry * rx * s;
     result.print();
-    printf("\n");
-
-    auto t = result.transpose();
-    t.print();
-
 
     return 0;
 }
