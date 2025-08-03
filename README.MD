@@ -9,5 +9,5 @@ cmake --build build
 
 ```Release
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+cmake --build build --config Release -- /m
 ```
