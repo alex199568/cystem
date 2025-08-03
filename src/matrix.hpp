@@ -33,6 +33,10 @@ class Matrix2 {
             printf("\n");
         }
     }
+
+    double det() {
+        return get(0, 0) * get(1, 1) - get(0, 1) * get(1, 0);
+    }
 };
 
 class Matrix3 {
