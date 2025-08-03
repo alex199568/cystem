@@ -32,6 +32,8 @@ int main() {
 
     auto result = tr * s;
     result.print();
+    auto inv = result.inverse();
+    inv.print();
 
     Vector v{1, 2, 3};
     auto vResult = result * v;
@@ -40,6 +42,11 @@ int main() {
     Point p{8, 1, -1};
     auto pResult = result * p;
     pResult.print();
+
+    auto originalVector = inv * vResult;
+    originalVector.print();
+    auto originalPoint = inv * pResult;
+    originalPoint.print();
 
 
     return 0;
