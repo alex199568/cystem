@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.24)
 # Give the project a name
 project(cystem)
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /O2 /Oi /Ot /fp:fast")
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ot /fp:fast /arch:AVX2")
 
 # List your source files explicitly.  CMake docs recommend this
 # rather than globbing so that the build system knows when to regenerate:contentReference[oaicite:0]{index=0}.

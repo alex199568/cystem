@@ -9,8 +9,6 @@ struct Color {
     double b;
 };
 
-void print(Color c);
-
 Color operator+(Color a, Color b);
 
 Color operator-(Color a, Color b);
@@ -28,11 +26,17 @@ extern Color darkGray;
 extern Color black;
 
 extern Color red;
+extern Color darkRed;
 extern Color green;
+extern Color darkGreen;
 extern Color blue;
+extern Color darkBlue;
 
 extern Color magenta;
+extern Color darkMagenta;
 extern Color yellow;
+extern Color darkYellow;
 extern Color cyan;
+extern Color darkCyan;
 
 #endif

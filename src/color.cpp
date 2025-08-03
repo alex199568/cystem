@@ -1,9 +1,5 @@
 #include "color.hpp"
 
-void print(Color c) {
-    printf("Color(%f, %f, %f)\n", c.r, c.g, c.b);
-}
-
 Color operator+(Color a, Color b) {
     return Color{a.r + b.r, a.g + b.g, a.b + b.b};
 }
@@ -31,9 +27,15 @@ Color darkGray = {0.25, 0.25, 0.25};
 Color black = {0, 0, 0};
 
 Color red = {1, 0, 0};
+Color darkRed = {0.5, 0, 0};
 Color green = {0, 1, 0};
+Color darkGreen = {0, 0.5, 0};
 Color blue = {0, 0, 1};
+Color darkBlue = {0, 0, 0.5};
 
 Color magenta = {1, 0, 1};
+Color darkMagenta = {0.5, 0, 0.5};
 Color yellow = {1, 1, 0};
+Color darkYellow = {0.5, 0.5, 0};
 Color cyan = {0, 1, 1};
+Color darkCyan = {0, 0.5, 0.5};
