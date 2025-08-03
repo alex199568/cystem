@@ -33,5 +33,9 @@ int main() {
     auto result = tr * s;
     result.print();
 
+    Vector v{1, 2, 3};
+    auto vResult = result * v;
+    vResult.print();
+
     return 0;
 }

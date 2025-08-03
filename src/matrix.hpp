@@ -5,6 +5,8 @@
 
 #include <array>
 
+#include "vector.hpp"
+
 class Matrix2 {
     std::array<double, 4> items;
 
@@ -115,6 +117,14 @@ Matrix operator*(Matrix a, Matrix b) {
     }
 
     return result;
+}
+
+Vector operator*(Matrix m, Vector v) {
+    return Vector{
+        m.get(0, 0) * v.x + m.get(0, 1) * v.y + m.get(0, 2) * v.z,
+        m.get(1, 0) * v.x + m.get(1, 1) * v.y + m.get(1, 2) * v.z,
+        m.get(2, 0) * v.x + m.get(2, 1) * v.y + m.get(2, 2) * v.z,
+    };
 }
 
 Matrix translation(double x, double y, double z) {

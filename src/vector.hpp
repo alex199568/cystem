@@ -8,11 +8,11 @@ struct Vector {
     double x;
     double y;
     double z;
-};
 
-void print(Vector vector) {
-    printf("Vector(%f %f %f)\n", vector.x, vector.y, vector.z);
-}
+    void print() {
+        printf("Vector(%f %f %f)\n", x, y, z);
+    }
+};
 
 Vector operator+(Vector a, Vector b) {
     return Vector{a.x + b.x, a.y + b.y, a.z + b.z};
