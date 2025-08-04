@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <vector>
 
 #include "vector.hpp"
 #include "point.hpp"
@@ -10,13 +11,24 @@
 #include "utils.hpp"
 #include "ray.hpp"
 
-struct Sphere {
-    Matrix inv;
+struct Material {
+    Color color;
+    double ambient;
+    double diffuse;
+    double specular;
+    double shininess;
 };
 
-Sphere sphere(Matrix transform) {
-    return Sphere{
-        transform.inverse()};
+struct Sphere {
+    Matrix inv;
+    Matrix invTr;
+    Material material;
+};
+
+Sphere sphere(Matrix transform, Material material) {
+    auto inv = transform.inverse();
+    auto invTr = inv.transpose();
+    return Sphere{inv, invTr, material};
 }
 
 struct Intersection {
@@ -24,29 +36,69 @@ struct Intersection {
     double t;
 };
 
-bool localIntersect(Ray ray) {
+std::vector<Intersection> localIntersect(Sphere *shape, Ray ray) {
     auto sphereToRay = ray.origin - Point{0, 0, 0};
     auto a = dot(ray.direction, ray.direction);
     auto b = 2 * dot(ray.direction, sphereToRay);
     auto c = dot(sphereToRay, sphereToRay) - 1;
     auto d = b * b - 4 * a * c;
 
+    std::vector<Intersection> result;
+
     if (d < 0) {
-        // will be empty intersections
-        return false;
+        return result;
     }
 
     auto sd = sqrt(d);
     auto t1 = (-b - sd) / (a * 2);
     auto t2 = (-b + sd) / (a * 2);
 
-    // return true for now, will be intersections
-    return true;
+    Intersection i1{shape, t1};
+    Intersection i2{shape, t2};
+
+    result.push_back(i1);
+    result.push_back(i2);
+
+    return result;
 }
 
-bool intersect(Sphere shape, Ray ray) {
-    auto localRay = shape.inv * ray;
-    return localIntersect(localRay);
+std::vector<Intersection> intersect(Sphere *shape, Ray ray) {
+    auto localRay = shape->inv * ray;
+    return localIntersect(shape, localRay);
+}
+
+Vector localNormal(Point point) {
+    return point - Point{0, 0, 0};
+}
+
+Vector normal(Sphere shape, Point point) {
+    auto objectPoint = shape.inv * point;
+    auto objectNormal = localNormal(objectPoint);
+    auto worldNormal = shape.invTr * objectNormal;
+    return worldNormal.unit();
+}
+
+struct Light {
+    Point position;
+    Color intensity;
+};
+
+Color lightning(Light light, Material material, Point point, Vector eye, Vector n) {
+    auto effectiveColor = material.color * light.intensity;
+    auto lightV = (light.position - point).unit();
+    auto ambient = effectiveColor * material.ambient;
+    auto lightDotNormal = dot(lightV, n);
+    if (lightDotNormal < 0) {
+        return ambient;
+    }
+    auto diffuse = effectiveColor * (material.diffuse * lightDotNormal);
+    auto reflect = (-lightV).reflect(n);
+    auto reflectDotEye = dot(reflect, eye);
+    if (reflectDotEye <= 0)
+        return ambient + diffuse;
+    auto factor = pow(reflectDotEye, material.shininess);
+    auto specular = light.intensity * (material.specular * factor);
+    return ambient + diffuse + specular;
 }
 
 void render() {
@@ -71,11 +123,14 @@ int main() {
     double pixelSize = wallSize / pixels;
     double half = wallSize / 2;
     Image canvas{pixels, pixels};
-    Color color = red;
-    Sphere shape = sphere(identity);
+
+    Material material{red, 0.1, 0.9, 0.9, 200};
+
+    Sphere shape = sphere(identity, material);
+
+    Light light = {Point{-10, 10, -10}, gray};
 
     clock_t start = clock();
-
 
     for (int y = 0; y < pixels; ++y) {
         double worldY = half - pixelSize * y;
@@ -83,8 +138,26 @@ int main() {
             double worldX = -half + pixelSize * x;
             Point position{worldX, worldY, wallZ};
             Ray ray{rayOrigin, (position - rayOrigin).unit()};
-            if (intersect(shape, ray)) {
-                canvas.set(x, y, color);
+            std::vector<Intersection> intersections = intersect(&shape, ray);
+            if (intersections.size() > 0) {
+                Intersection i1 = intersections[0];
+                Intersection i2 = intersections[1];
+                Intersection closest;
+                if (i1.t >= 0 && i1.t < i2.t) {
+                    closest = i1;
+                } else if (i2.t >= 0 && i2.t < i1.t) {
+                    closest = i2;
+                }
+
+                if (closest.shape) {
+
+                    auto point = ray.at(closest.t);
+                    auto n = normal(*closest.shape, point);
+                    auto eye = -ray.direction;
+                    auto color = lightning(light, material, point, eye, n);
+
+                    canvas.set(x, y, color);
+                }
             }
         }
     }
@@ -93,7 +166,7 @@ int main() {
     double duration = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Rendering time: %.6f seconds\n", duration);
 
-    canvas.save("../../renders/sphere.png");
+    canvas.save("../../renders/light.png");
 
     return 0;
 }

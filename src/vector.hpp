@@ -8,7 +8,10 @@ struct Vector;
 
 double length(Vector v);
 
+Vector operator-(Vector a, Vector b);
 Vector operator/(Vector a, double d);
+Vector operator*(Vector a, double d);
+double dot(Vector a, Vector b);
 
 struct Vector {
     double x;
@@ -22,19 +25,17 @@ struct Vector {
     Vector unit() {
         return *this / length(*this);
     }
+
+    Vector reflect(Vector normal) {
+        return *this - normal * 2 * dot(*this, normal);
+    }
 };
 
 Vector operator+(Vector a, Vector b);
 
-Vector operator-(Vector a, Vector b);
-
 Vector operator-(Vector v);
 
-Vector operator*(Vector a, double d);
-
 Vector operator/(Vector a, double d);
-
-double dot(Vector a, Vector b);
 
 double squaredLength(Vector v);
 
