@@ -17,7 +17,7 @@ void Image::save(const char *path) {
         }
     }
 
-    stbi_write_png("../../renders/image.png", w, h, 3, data, w * 3);
+    stbi_write_png(path, w, h, 3, data, w * 3);
 
     delete[] data;
 }

@@ -13,6 +13,9 @@ set(SRC_FILES
     src/main.cpp
     src/color.cpp
     src/image.cpp
+    src/matrix.cpp
+    src/point.cpp
+    src/vector.cpp
 )
 
 # Define an executable target named "cystem" from the listed files
