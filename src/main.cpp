@@ -26,6 +26,11 @@ struct Sphere {
     Material material;
 };
 
+struct Light {
+    Point position;
+    Color intensity;
+};
+
 Sphere sphere(Matrix transform, Material material) {
     auto inv = transform.inverse();
     auto invTr = inv.transpose();
@@ -43,11 +48,12 @@ bool compareIntersections(Intersection i1, Intersection i2) {
 
 std::vector<Intersection> intersectionsBuffer;
 std::vector<Sphere> shapes;
+std::vector<Light> lights;
 
 Intersection *hit() {
-    for (auto iter = intersectionsBuffer.begin(); iter != intersectionsBuffer.end(); ++iter) {
-        if (iter->t >= 0.0)
-            return &(*iter);
+    for (auto &intersection : intersectionsBuffer) {
+        if (intersection.t >= 0.0)
+            return &intersection;
     }
     return nullptr;
 }
@@ -89,11 +95,6 @@ Vector normal(Sphere shape, Point point) {
     auto worldNormal = shape.invTr * objectNormal;
     return worldNormal.unit();
 }
-
-struct Light {
-    Point position;
-    Color intensity;
-};
 
 Color lightning(Light light, Material material, Point point, Vector eye, Vector n) {
     auto effectiveColor = material.color * light.intensity;
@@ -144,7 +145,10 @@ int main() {
     Sphere sphere2 = sphere(translation(0.5, 0, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
     shapes.push_back(sphere2);
 
-    Light light = {Point{-10, 10, -10}, gray};
+    Light light1 = {Point{-10, 10, -10}, gray};
+    lights.push_back(light1);
+    Light light2 = {Point{10, -10, -10}, gray};
+    lights.push_back(light2);
 
     clock_t start = clock();
 
@@ -156,8 +160,8 @@ int main() {
             Ray ray{rayOrigin, (position - rayOrigin).unit()};
 
             intersectionsBuffer.clear();
-            for (auto iter = shapes.begin(); iter != shapes.end(); ++iter) {
-                intersect(&(*iter), ray);
+            for (auto &shape : shapes) {
+                intersect(&shape, ray);
             }
             std::sort(intersectionsBuffer.begin(), intersectionsBuffer.end(), compareIntersections);
 
@@ -166,7 +170,10 @@ int main() {
                 auto point = ray.at(h->t);
                 auto n = normal(*h->shape, point);
                 auto eye = -ray.direction;
-                auto color = lightning(light, h->shape->material, point, eye, n);
+                auto color = Color{0, 0, 0};
+                for (auto &light : lights) {
+                    color += lightning(light, h->shape->material, point, eye, n);
+                }
 
                 canvas.set(x, y, color);
             }

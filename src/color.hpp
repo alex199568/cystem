@@ -7,6 +7,13 @@ struct Color {
     double r;
     double g;
     double b;
+
+    Color &operator+=(const Color &rhs) {
+        r += rhs.r;
+        g += rhs.g;
+        b += rhs.b;
+        return *this;
+    }
 };
 
 Color operator+(Color a, Color b);
