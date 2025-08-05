@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <vector>
+#include <algorithm>
 
 #include "vector.hpp"
 #include "point.hpp"
@@ -36,17 +37,30 @@ struct Intersection {
     double t;
 };
 
-std::vector<Intersection> localIntersect(Sphere *shape, Ray ray) {
+bool compareIntersections(Intersection i1, Intersection i2) {
+    return i1.t < i2.t;
+}
+
+std::vector<Intersection> intersectionsBuffer;
+std::vector<Sphere> shapes;
+
+Intersection *hit() {
+    for (auto iter = intersectionsBuffer.begin(); iter != intersectionsBuffer.end(); ++iter) {
+        if (iter->t >= 0.0)
+            return &(*iter);
+    }
+    return nullptr;
+}
+
+void localIntersect(Sphere *shape, Ray ray) {
     auto sphereToRay = ray.origin - Point{0, 0, 0};
     auto a = dot(ray.direction, ray.direction);
     auto b = 2 * dot(ray.direction, sphereToRay);
     auto c = dot(sphereToRay, sphereToRay) - 1;
     auto d = b * b - 4 * a * c;
 
-    std::vector<Intersection> result;
-
     if (d < 0) {
-        return result;
+        return;
     }
 
     auto sd = sqrt(d);
@@ -56,15 +70,13 @@ std::vector<Intersection> localIntersect(Sphere *shape, Ray ray) {
     Intersection i1{shape, t1};
     Intersection i2{shape, t2};
 
-    result.push_back(i1);
-    result.push_back(i2);
-
-    return result;
+    intersectionsBuffer.push_back(i1);
+    intersectionsBuffer.push_back(i2);
 }
 
-std::vector<Intersection> intersect(Sphere *shape, Ray ray) {
+void intersect(Sphere *shape, Ray ray) {
     auto localRay = shape->inv * ray;
-    return localIntersect(shape, localRay);
+    localIntersect(shape, localRay);
 }
 
 Vector localNormal(Point point) {
@@ -124,9 +136,13 @@ int main() {
     double half = wallSize / 2;
     Image canvas{pixels, pixels};
 
-    Material material{red, 0.1, 0.9, 0.9, 200};
+    Material redMaterial{red, 0.1, 0.9, 0.9, 200};
+    Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
 
-    Sphere shape = sphere(identity, material);
+    Sphere sphere1 = sphere(translation(-0.5, 0, 0) * scale(0.5, 0.5, 0.5), redMaterial);
+    shapes.push_back(sphere1);
+    Sphere sphere2 = sphere(translation(0.5, 0, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
+    shapes.push_back(sphere2);
 
     Light light = {Point{-10, 10, -10}, gray};
 
@@ -138,26 +154,21 @@ int main() {
             double worldX = -half + pixelSize * x;
             Point position{worldX, worldY, wallZ};
             Ray ray{rayOrigin, (position - rayOrigin).unit()};
-            std::vector<Intersection> intersections = intersect(&shape, ray);
-            if (intersections.size() > 0) {
-                Intersection i1 = intersections[0];
-                Intersection i2 = intersections[1];
-                Intersection closest;
-                if (i1.t >= 0 && i1.t < i2.t) {
-                    closest = i1;
-                } else if (i2.t >= 0 && i2.t < i1.t) {
-                    closest = i2;
-                }
 
-                if (closest.shape) {
+            intersectionsBuffer.clear();
+            for (auto iter = shapes.begin(); iter != shapes.end(); ++iter) {
+                intersect(&(*iter), ray);
+            }
+            std::sort(intersectionsBuffer.begin(), intersectionsBuffer.end(), compareIntersections);
 
-                    auto point = ray.at(closest.t);
-                    auto n = normal(*closest.shape, point);
-                    auto eye = -ray.direction;
-                    auto color = lightning(light, material, point, eye, n);
+            Intersection *h = hit();
+            if (h) {
+                auto point = ray.at(h->t);
+                auto n = normal(*h->shape, point);
+                auto eye = -ray.direction;
+                auto color = lightning(light, h->shape->material, point, eye, n);
 
-                    canvas.set(x, y, color);
-                }
+                canvas.set(x, y, color);
             }
         }
     }
@@ -166,7 +177,7 @@ int main() {
     double duration = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Rendering time: %.6f seconds\n", duration);
 
-    canvas.save("../../renders/light.png");
+    canvas.save("../../renders/scene.png");
 
     return 0;
 }
