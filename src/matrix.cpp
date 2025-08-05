@@ -82,3 +82,16 @@ Matrix scale(double x, double y, double z) {
                    0, 0, z, 0,
                    0, 0, 0, 1});
 }
+
+Matrix lookAt(Point from, Point to, Vector up) {
+    auto forward = (to - from).unit();
+    auto backward = -forward;
+    auto upN = up.unit();
+    auto left = cross(forward, upN);
+    auto trueUp = cross(left, forward);
+    Matrix orientation({left.x, left.y, left.z, 0,
+                        trueUp.x, trueUp.y, trueUp.z, 0,
+                        backward.x, backward.y, backward.z, 0,
+                        0, 0, 0, 1});
+    return orientation * translation(-from.x, -from.y, -from.z);
+}

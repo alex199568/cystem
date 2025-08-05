@@ -31,6 +31,47 @@ struct Light {
     Color intensity;
 };
 
+struct Camera {
+    int w;
+    int h;
+    double pixelSize;
+    double halfWidth;
+    double halfHeight;
+    Matrix inv;
+    Point origin;
+
+    Ray rayForPixel(int x, int y) {
+        auto xOffset = (x + 0.5) * pixelSize;
+        auto yOffset = (y + 0.5) * pixelSize;
+        auto worldX = halfWidth - xOffset;
+        auto worldY = halfHeight - yOffset;
+        auto pixel = inv * Point{worldX, worldY, -1};
+        auto direction = (pixel - origin).unit();
+        return Ray{origin, direction};
+    }
+};
+
+Camera camera(int w, int h, double fov, Matrix view) {
+    auto halfView = tan(fov / 2);
+    auto aspect = (double)w / (double)h;
+    double halfWidth = 0.0;
+    double halfHeight = 0.0;
+    if (aspect >= 1) {
+        halfWidth = halfView;
+        halfHeight = halfView / aspect;
+    } else {
+        halfWidth = halfView * aspect;
+        halfHeight = halfView;
+    }
+    auto pixelSize = halfWidth * 2 / (double)w;
+    auto inv = view.inverse();
+    auto origin = inv * Point{0, 0, 0};
+    return Camera{
+        w, h,
+        pixelSize, halfWidth, halfHeight,
+        inv, origin};
+}
+
 Sphere sphere(Matrix transform, Material material) {
     auto inv = transform.inverse();
     auto invTr = inv.transpose();
@@ -129,35 +170,30 @@ void render() {
 int main() {
     printf("Cystem\n");
 
-    Point rayOrigin{0, 0, -5};
-    double wallZ = 10;
-    double wallSize = 7;
-    int pixels = 1536;
-    double pixelSize = wallSize / pixels;
-    double half = wallSize / 2;
-    Image canvas{pixels, pixels};
-
     Material redMaterial{red, 0.1, 0.9, 0.9, 200};
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
+    Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
-    Sphere sphere1 = sphere(translation(-0.5, 0, 0) * scale(0.5, 0.5, 0.5), redMaterial);
+    Sphere sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
     shapes.push_back(sphere1);
-    Sphere sphere2 = sphere(translation(0.5, 0, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
+    Sphere sphere2 = sphere(translation(0.5, 0.2, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
     shapes.push_back(sphere2);
+    Sphere floor = sphere(scale(10, 0.1, 10), grayMaterial);
+    shapes.push_back(floor);
 
     Light light1 = {Point{-10, 10, -10}, gray};
     lights.push_back(light1);
-    Light light2 = {Point{10, -10, -10}, gray};
+    Light light2 = {Point{10, -10, -10}, darkGray};
     lights.push_back(light2);
 
     clock_t start = clock();
 
-    for (int y = 0; y < pixels; ++y) {
-        double worldY = half - pixelSize * y;
-        for (int x = 0; x < pixels; ++x) {
-            double worldX = -half + pixelSize * x;
-            Point position{worldX, worldY, wallZ};
-            Ray ray{rayOrigin, (position - rayOrigin).unit()};
+    auto cam = camera(1920, 1080, pi / 3, lookAt(Point{0, 1, -4}, Point{0, 0, 0}, Vector{0, 1, 0}));
+    Image canvas{cam.w, cam.h};
+
+    for (int y = 0; y < cam.h; ++y) {
+        for (int x = 0; x < cam.w; ++x) {
+            auto ray = cam.rayForPixel(x, y);
 
             intersectionsBuffer.clear();
             for (auto &shape : shapes) {

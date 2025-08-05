@@ -235,4 +235,6 @@ Matrix rotationZ(double rads);
 
 Matrix scale(double x, double y, double z);
 
+Matrix lookAt(Point from, Point to, Vector up);
+
 #endif
