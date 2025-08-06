@@ -1,12 +1,14 @@
 #ifndef _VECTOR_HPP_
 #define _VECTOR_HPP_
 
+#include <cmath>
 #include <stdio.h>
 #include <math.h>
 
 struct Vector;
 
 double length(Vector v);
+double squaredLength(Vector v);
 
 Vector operator-(Vector a, Vector b);
 Vector operator/(Vector a, double d);
@@ -22,8 +24,12 @@ struct Vector {
         printf("Vector(%f %f %f)\n", x, y, z);
     }
 
+    double length() {
+        return sqrt(squaredLength(*this));
+    }
+
     Vector unit() {
-        return *this / length(*this);
+        return *this / length();
     }
 
     Vector reflect(Vector normal) {
@@ -37,7 +43,6 @@ Vector operator-(Vector v);
 
 Vector operator/(Vector a, double d);
 
-double squaredLength(Vector v);
 
 Vector cross(Vector a, Vector b);
 

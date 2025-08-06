@@ -28,10 +28,6 @@ double squaredLength(Vector v) {
     return dot(v, v);
 }
 
-double length(Vector v) {
-    return sqrt(squaredLength(v));
-}
-
 Vector cross(Vector a, Vector b) {
     return Vector{
         a.y * b.z - a.z * b.y,

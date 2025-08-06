@@ -91,12 +91,13 @@ std::vector<Intersection> intersectionsBuffer;
 std::vector<Sphere> shapes;
 std::vector<Light> lights;
 
-Intersection *hit() {
+Intersection hit() {
+    Intersection result{nullptr, 0.0};
     for (auto &intersection : intersectionsBuffer) {
         if (intersection.t >= 0.0)
-            return &intersection;
+            return intersection;
     }
-    return nullptr;
+    return result;
 }
 
 void localIntersect(Sphere *shape, Ray ray) {
@@ -126,6 +127,14 @@ void intersect(Sphere *shape, Ray ray) {
     localIntersect(shape, localRay);
 }
 
+void intersect(Ray ray) {
+    intersectionsBuffer.clear();
+    for (auto &shape : shapes) {
+        intersect(&shape, ray);
+    }
+    std::sort(intersectionsBuffer.begin(), intersectionsBuffer.end(), compareIntersections);
+}
+
 Vector localNormal(Point point) {
     return point - Point{0, 0, 0};
 }
@@ -137,8 +146,33 @@ Vector normal(Sphere shape, Point point) {
     return worldNormal.unit();
 }
 
-Color lightning(Light light, Material material, Point point, Vector eye, Vector n) {
-    auto effectiveColor = material.color * light.intensity;
+struct IntersectionContext {
+    Intersection h;
+    Point point;
+    Vector eye;
+    Vector n;
+    Point overPoint;
+};
+
+IntersectionContext context(Intersection i, Ray ray) {
+    auto point = ray.at(i.t);
+    auto eye = -ray.direction;
+    auto n = normal(*i.shape, point);
+    Vector adjustedNormal = n;
+    if (dot(n, eye) < 0) {
+        adjustedNormal = -n;
+    }
+    auto overPoint = point + adjustedNormal * epsilon;
+    return IntersectionContext{i, point, eye, n, overPoint};
+}
+
+Color lightning(Light light, double shadowValue, IntersectionContext intersectionContext) {
+    auto material = intersectionContext.h.shape->material;
+    auto point = intersectionContext.point;
+    auto eye = intersectionContext.eye;
+    auto n = intersectionContext.n;
+
+    auto effectiveColor = material.color * light.intensity * (1.0 - shadowValue);
     auto lightV = (light.position - point).unit();
     auto ambient = effectiveColor * material.ambient;
     auto lightDotNormal = dot(lightV, n);
@@ -153,6 +187,21 @@ Color lightning(Light light, Material material, Point point, Vector eye, Vector 
     auto factor = pow(reflectDotEye, material.shininess);
     auto specular = light.intensity * (material.specular * factor);
     return ambient + diffuse + specular;
+}
+
+double shadow(Light light, Point point) {
+    auto v = light.position - point;
+    auto distance = v.length();
+    auto direction = v.unit();
+    Ray ray{point, direction};
+    intersect(ray);
+    Intersection h = hit();
+    if (h.shape) {
+        if (h.t < distance)
+            return 1.0;
+        return 0.0;
+    }
+    return 0.0;
 }
 
 void render() {
@@ -183,7 +232,7 @@ int main() {
 
     Light light1 = {Point{-10, 10, -10}, gray};
     lights.push_back(light1);
-    Light light2 = {Point{10, -10, -10}, darkGray};
+    Light light2 = {Point{10, 10, -10}, darkGray};
     lights.push_back(light2);
 
     clock_t start = clock();
@@ -195,20 +244,15 @@ int main() {
         for (int x = 0; x < cam.w; ++x) {
             auto ray = cam.rayForPixel(x, y);
 
-            intersectionsBuffer.clear();
-            for (auto &shape : shapes) {
-                intersect(&shape, ray);
-            }
-            std::sort(intersectionsBuffer.begin(), intersectionsBuffer.end(), compareIntersections);
+            intersect(ray);
 
-            Intersection *h = hit();
-            if (h) {
-                auto point = ray.at(h->t);
-                auto n = normal(*h->shape, point);
-                auto eye = -ray.direction;
+            Intersection h = hit();
+            if (h.shape) {
                 auto color = Color{0, 0, 0};
                 for (auto &light : lights) {
-                    color += lightning(light, h->shape->material, point, eye, n);
+                    auto ctx = context(h, ray);
+                    auto s = shadow(light, ctx.overPoint);
+                    color += lightning(light, s, ctx);
                 }
 
                 canvas.set(x, y, color);
@@ -220,7 +264,7 @@ int main() {
     double duration = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Rendering time: %.6f seconds\n", duration);
 
-    canvas.save("../../renders/scene.png");
+    canvas.save("../../renders/shadows.png");
 
     return 0;
 }
