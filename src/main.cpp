@@ -20,10 +20,16 @@ struct Material {
     double shininess;
 };
 
-struct Sphere {
+enum ShapeType {
+    SPHERE,
+    PLANE
+};
+
+struct Shape {
     Matrix inv;
     Matrix invTr;
     Material material;
+    ShapeType type;
 };
 
 struct Light {
@@ -72,14 +78,20 @@ Camera camera(int w, int h, double fov, Matrix view) {
         inv, origin};
 }
 
-Sphere sphere(Matrix transform, Material material) {
+Shape sphere(Matrix transform, Material material) {
     auto inv = transform.inverse();
     auto invTr = inv.transpose();
-    return Sphere{inv, invTr, material};
+    return Shape{inv, invTr, material, SPHERE};
+}
+
+Shape plane(Matrix transform, Material material) {
+    auto inv = transform.inverse();
+    auto invTr = inv.transpose();
+    return Shape{inv, invTr, material, PLANE};
 }
 
 struct Intersection {
-    Sphere *shape;
+    Shape *shape;
     double t;
 };
 
@@ -88,7 +100,7 @@ bool compareIntersections(Intersection i1, Intersection i2) {
 }
 
 std::vector<Intersection> intersectionsBuffer;
-std::vector<Sphere> shapes;
+std::vector<Shape> shapes;
 std::vector<Light> lights;
 
 Intersection hit() {
@@ -100,7 +112,7 @@ Intersection hit() {
     return result;
 }
 
-void localIntersect(Sphere *shape, Ray ray) {
+void intersectSphere(Shape *shape, Ray ray) {
     auto sphereToRay = ray.origin - Point{0, 0, 0};
     auto a = dot(ray.direction, ray.direction);
     auto b = 2 * dot(ray.direction, sphereToRay);
@@ -122,9 +134,23 @@ void localIntersect(Sphere *shape, Ray ray) {
     intersectionsBuffer.push_back(i2);
 }
 
-void intersect(Sphere *shape, Ray ray) {
+void intersectPlane(Shape *shape, Ray ray) {
+    if (abs(ray.direction.y) < epsilon) {
+        return;
+    }
+
+    auto t = -ray.origin.y / ray.direction.y;
+    Intersection i{shape, t};
+    intersectionsBuffer.push_back(i);
+}
+
+void intersect(Shape *shape, Ray ray) {
     auto localRay = shape->inv * ray;
-    localIntersect(shape, localRay);
+
+    if (shape->type == SPHERE)
+        intersectSphere(shape, localRay);
+    else if (shape->type == PLANE)
+        intersectPlane(shape, localRay);
 }
 
 void intersect(Ray ray) {
@@ -135,13 +161,22 @@ void intersect(Ray ray) {
     std::sort(intersectionsBuffer.begin(), intersectionsBuffer.end(), compareIntersections);
 }
 
-Vector localNormal(Point point) {
+Vector sphereNormal(Point point) {
     return point - Point{0, 0, 0};
 }
 
-Vector normal(Sphere shape, Point point) {
+Vector planeNormal(Point point) {
+    return Vector{0, 1, 0};
+}
+
+Vector normal(Shape shape, Point point) {
     auto objectPoint = shape.inv * point;
-    auto objectNormal = localNormal(objectPoint);
+    Vector objectNormal;
+    if (shape.type == SPHERE) {
+        objectNormal = sphereNormal(objectPoint);
+    } else if (shape.type == PLANE) {
+        objectNormal = planeNormal(objectPoint);
+    }
     auto worldNormal = shape.invTr * objectNormal;
     return worldNormal.unit();
 }
@@ -223,11 +258,11 @@ int main() {
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
     Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
-    Sphere sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
+    Shape sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
     shapes.push_back(sphere1);
-    Sphere sphere2 = sphere(translation(0.5, 0.2, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
+    Shape sphere2 = sphere(translation(0.5, 0.2, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
     shapes.push_back(sphere2);
-    Sphere floor = sphere(scale(10, 0.1, 10), grayMaterial);
+    Shape floor = plane(scale(10, 0.1, 10), grayMaterial);
     shapes.push_back(floor);
 
     Light light1 = {Point{-10, 10, -10}, gray};
@@ -264,7 +299,7 @@ int main() {
     double duration = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Rendering time: %.6f seconds\n", duration);
 
-    canvas.save("../../renders/shadows.png");
+    canvas.save("../../renders/plane.png");
 
     return 0;
 }
