@@ -16,17 +16,7 @@ enum PatternType {
     STRIPES
 };
 
-struct Pattern {
-    Color a;
-    Color b;
-
-    Color at(Point point) {
-        auto x = std::floor(point.x);
-        if (((int)x) % 2 == 0)
-            return a;
-        return b;
-    }
-};
+struct Pattern;
 
 struct Material {
     Color color;
@@ -114,6 +104,29 @@ struct Intersection {
 
 bool compareIntersections(Intersection i1, Intersection i2) {
     return i1.t < i2.t;
+}
+
+struct Pattern {
+    Color a;
+    Color b;
+    Matrix inv;
+
+    Color at(Point point) {
+        auto x = std::floor(point.x);
+        if (((int)x) % 2 == 0)
+            return a;
+        return b;
+    }
+
+    Color at(Shape *shape, Point point) {
+        auto objectPoint = shape->inv * point;
+        auto patternPoint = inv * objectPoint;
+        return at(patternPoint);
+    }
+};
+
+Pattern stripes(Color a, Color b, Matrix tr) {
+    return Pattern{a, b, tr.inverse()};
 }
 
 std::vector<Intersection> intersectionsBuffer;
@@ -223,7 +236,7 @@ Color lightning(Light light, double shadowValue, IntersectionContext intersectio
 
     auto materialColor = material.color;
     if (material.pattern) {
-        materialColor = material.pattern->at(intersectionContext.point);
+        materialColor = material.pattern->at(intersectionContext.h.shape, intersectionContext.point);
     }
 
     auto point = intersectionContext.point;
@@ -281,7 +294,7 @@ int main() {
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
     Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
-    Pattern stripesPattern{lightGray, darkGray};
+    Pattern stripesPattern = stripes(lightGray, darkGray, rotationY(-pi / 3) * scale(0.1, 0.1, 0.1));
     Material stripesMaterial{black, 0.1, 0.9, 0.9, 200, &stripesPattern};
 
     Shape sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
