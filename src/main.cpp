@@ -13,7 +13,8 @@
 #include "ray.hpp"
 
 enum PatternType {
-    STRIPES
+    STRIPES,
+    GRADIENT
 };
 
 struct Pattern;
@@ -110,23 +111,38 @@ struct Pattern {
     Color a;
     Color b;
     Matrix inv;
+    PatternType type;
 
-    Color at(Point point) {
+    Color stripe(Point point) {
         auto x = std::floor(point.x);
         if (((int)x) % 2 == 0)
             return a;
         return b;
     }
 
+    Color gradient(Point point) {
+        auto distance = b - a;
+        auto fraction = point.x - std::floor(point.x);
+        return a + distance * fraction;
+    }
+
     Color at(Shape *shape, Point point) {
         auto objectPoint = shape->inv * point;
         auto patternPoint = inv * objectPoint;
-        return at(patternPoint);
+        if (type == STRIPES)
+            return stripe(patternPoint);
+        if (type == GRADIENT)
+            return gradient(patternPoint);
+        return black;
     }
 };
 
 Pattern stripes(Color a, Color b, Matrix tr) {
-    return Pattern{a, b, tr.inverse()};
+    return Pattern{a, b, tr.inverse(), STRIPES};
+}
+
+Pattern gradient(Color a, Color b, Matrix tr) {
+    return Pattern{a, b, tr.inverse(), GRADIENT};
 }
 
 std::vector<Intersection> intersectionsBuffer;
@@ -294,14 +310,14 @@ int main() {
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
     Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
-    Pattern stripesPattern = stripes(lightGray, darkGray, rotationY(-pi / 3) * scale(0.1, 0.1, 0.1));
-    Material stripesMaterial{black, 0.1, 0.9, 0.9, 200, &stripesPattern};
+    Pattern pattern = gradient(lightGray, darkGray, scale(0.1, 0.1, 0.1));
+    Material patternMaterial{black, 0.1, 0.9, 0.9, 200, &pattern};
 
     Shape sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
     shapes.push_back(sphere1);
     Shape sphere2 = sphere(translation(0.5, 0.2, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
     shapes.push_back(sphere2);
-    Shape floor = plane(scale(10, 0.1, 10), stripesMaterial);
+    Shape floor = plane(scale(10, 0.1, 10), patternMaterial);
     shapes.push_back(floor);
 
     Light light1 = {Point{-10, 10, -10}, gray};
