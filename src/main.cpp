@@ -12,12 +12,29 @@
 #include "utils.hpp"
 #include "ray.hpp"
 
+enum PatternType {
+    STRIPES
+};
+
+struct Pattern {
+    Color a;
+    Color b;
+
+    Color at(Point point) {
+        auto x = std::floor(point.x);
+        if (((int)x) % 2 == 0)
+            return a;
+        return b;
+    }
+};
+
 struct Material {
     Color color;
     double ambient;
     double diffuse;
     double specular;
     double shininess;
+    Pattern *pattern;
 };
 
 enum ShapeType {
@@ -203,11 +220,17 @@ IntersectionContext context(Intersection i, Ray ray) {
 
 Color lightning(Light light, double shadowValue, IntersectionContext intersectionContext) {
     auto material = intersectionContext.h.shape->material;
+
+    auto materialColor = material.color;
+    if (material.pattern) {
+        materialColor = material.pattern->at(intersectionContext.point);
+    }
+
     auto point = intersectionContext.point;
     auto eye = intersectionContext.eye;
     auto n = intersectionContext.n;
 
-    auto effectiveColor = material.color * light.intensity * (1.0 - shadowValue);
+    auto effectiveColor = materialColor * light.intensity * (1.0 - shadowValue);
     auto lightV = (light.position - point).unit();
     auto ambient = effectiveColor * material.ambient;
     auto lightDotNormal = dot(lightV, n);
@@ -258,11 +281,14 @@ int main() {
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
     Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
+    Pattern stripesPattern{lightGray, darkGray};
+    Material stripesMaterial{black, 0.1, 0.9, 0.9, 200, &stripesPattern};
+
     Shape sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
     shapes.push_back(sphere1);
     Shape sphere2 = sphere(translation(0.5, 0.2, 0) * scale(0.5, 0.5, 0.5), greenMaterial);
     shapes.push_back(sphere2);
-    Shape floor = plane(scale(10, 0.1, 10), grayMaterial);
+    Shape floor = plane(scale(10, 0.1, 10), stripesMaterial);
     shapes.push_back(floor);
 
     Light light1 = {Point{-10, 10, -10}, gray};
@@ -299,7 +325,7 @@ int main() {
     double duration = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Rendering time: %.6f seconds\n", duration);
 
-    canvas.save("../../renders/plane.png");
+    canvas.save("../../renders/patterns.png");
 
     return 0;
 }
