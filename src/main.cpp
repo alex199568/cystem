@@ -14,7 +14,8 @@
 
 enum PatternType {
     STRIPES,
-    GRADIENT
+    GRADIENT,
+    RING
 };
 
 struct Pattern;
@@ -126,6 +127,13 @@ struct Pattern {
         return a + distance * fraction;
     }
 
+    Color ring(Point point) {
+        auto xz = std::floor(sqrt(point.x * point.x + point.z * point.z));
+        if ((int)xz % 2 == 0)
+            return a;
+        return b;
+    }
+
     Color at(Shape *shape, Point point) {
         auto objectPoint = shape->inv * point;
         auto patternPoint = inv * objectPoint;
@@ -133,6 +141,8 @@ struct Pattern {
             return stripe(patternPoint);
         if (type == GRADIENT)
             return gradient(patternPoint);
+        if (type == RING)
+            return ring(patternPoint);
         return black;
     }
 };
@@ -143,6 +153,10 @@ Pattern stripes(Color a, Color b, Matrix tr) {
 
 Pattern gradient(Color a, Color b, Matrix tr) {
     return Pattern{a, b, tr.inverse(), GRADIENT};
+}
+
+Pattern ring(Color a, Color b, Matrix tr) {
+    return Pattern{a, b, tr.inverse(), RING};
 }
 
 std::vector<Intersection> intersectionsBuffer;
@@ -310,7 +324,7 @@ int main() {
     Material greenMaterial{green, 0.1, 0.9, 0.9, 200};
     Material grayMaterial{gray, 0.1, 0.9, 0.9, 200};
 
-    Pattern pattern = gradient(lightGray, darkGray, scale(0.1, 0.1, 0.1));
+    Pattern pattern = ring(lightGray, darkGray, scale(0.1, 0.1, 0.1));
     Material patternMaterial{black, 0.1, 0.9, 0.9, 200, &pattern};
 
     Shape sphere1 = sphere(translation(-0.5, 0.5, 0) * scale(0.5, 0.5, 0.5), redMaterial);
